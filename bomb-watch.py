@@ -1,9 +1,9 @@
 import requests
 from datetime import datetime, timedelta
 
+api_key = 'TOILETS API'
 
 def get_faction_members(faction_id):
-    api_key = 'TOILETS API'
     base_url = 'https://api.torn.com/faction/'
 
     # Prepare the API request URL
@@ -32,7 +32,8 @@ def get_faction_members(faction_id):
 
 def get_user_info(api_key, base_url, user_id):
     # Prepare the API request URL
-    url = f'{base_url}{user_id}?selections=profile,timestamp,networth&key={api_key}'
+    base_url = 'https://api.torn.com/profile/'
+    url = f'{base_url}{user_id}?selections=profile,timestamp,personalstats&key={api_key}'
 
     try:
         # Send the API request
@@ -51,7 +52,7 @@ def get_user_info(api_key, base_url, user_id):
 
 
 def check_networth_decrease(user_id, networth_data, threshold):
-    networth_values = networth_data[user_id]['networth']['total']
+    networth_values = networth_data[user_id]['personalstats']['networth']
 
     if len(networth_values) < 2:
         return False
@@ -74,9 +75,6 @@ def check_networth_decrease(user_id, networth_data, threshold):
     return networth_diff <= -threshold
 
 if __name__ == "__main__":
-    api_key = 'TOILETS API'
-    base_url = 'https://api.torn.com/faction/'
-
     faction_id = '20303'
     members_dict = get_faction_members(faction_id)
 
