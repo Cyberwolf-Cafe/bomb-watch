@@ -1,7 +1,7 @@
 import requests
 from datetime import datetime, timedelta
 
-api_key = 'TOILETS API'
+api_key = 'L40rkMstF9EBf6ot'
 
 def get_faction_members(faction_id):
     base_url = 'https://api.torn.com/faction/'
@@ -9,31 +9,25 @@ def get_faction_members(faction_id):
     # Prepare the API request URL
     url = f'{base_url}{faction_id}?selections=basic&key={api_key}'
 
-    try:
-        # Send the API request
-        response = requests.get(url)
-        data = response.json()
+    # Send the API request
+    response = requests.get(url)
+    data = response.json()
 
-        # Check if the request was successful
-        if data.get('error'):
-            raise Exception(f"Error: {data['error']['error']}")
+    # Check if the request was successful
+    if 'members' not in data:
+        raise Exception(f'Expected members in response but got {data}')
 
-        # Create a dictionary of member IDs
-        members_dict = {}
-        for member_id, member_data in data['members'].items():
-            members_dict[member_id] = member_data['name']
+    # Create a dictionary of member IDs
+    members_dict = {key: val['name'] for (key,val) in data['members'].items()}
 
-        return members_dict
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
+    return members_dict
 
 
-def get_user_info(api_key, base_url, user_id):
+
+def get_networth(user_id, timestamp):
     # Prepare the API request URL
     base_url = 'https://api.torn.com/profile/'
-    url = f'{base_url}{user_id}?selections=profile,timestamp,personalstats&key={api_key}'
+    url = f'{base_url}{user_id}?selections=personalstats&timestamp={timestamp}&key={api_key}'
 
     try:
         # Send the API request
@@ -44,35 +38,28 @@ def get_user_info(api_key, base_url, user_id):
         if data.get('error'):
             raise Exception(f"Error: {data['error']['error']}")
 
-        return data
+        return data['personalstats']['networth']
 
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
 
 
-def check_networth_decrease(user_id, networth_data, threshold):
-    networth_values = networth_data[user_id]['personalstats']['networth']
+def check_networth_decrease(user_id, threshold):
 
-    if len(networth_values) < 2:
-        return False
-
-    # Get nw values from the last 48 hours
+    # Get nw values from the last week
     now = datetime.now()
-    two_days_ago = now - timedelta(hours=48)
-    relevant_networth_values = [value for timestamp, value in networth_values.items() if
-                                datetime.fromtimestamp(int(timestamp)) >= two_days_ago]
+    day = timedelta(hours=24)
 
-    if len(relevant_networth_values) < 2:
-        return False
+    pnw = get_networth(user_id, now)
+    for i in range(7):
+        now -= day
+        nw = get_networth(user_id, now)
+        if (pnw - nw) >= threshold:
+            return True
+        pnw = nw
 
-    # Convert nw values to int
-    relevant_networth_values = [int(value) for value in relevant_networth_values.values()]
-
-    # Calculate nw difference over the last 48 hours
-    networth_diff = relevant_networth_values[-1] - relevant_networth_values[0]
-
-    return networth_diff <= -threshold
+    return False
 
 if __name__ == "__main__":
     faction_id = '20303'
@@ -81,12 +68,8 @@ if __name__ == "__main__":
     if members_dict:
         print(f"Members of Faction {faction_id}:")
         for member_id, member_name in members_dict.items():
-            user_info = get_user_info(api_key, base_url, member_id)
-
-            if user_info:
-                networth_decreased = check_networth_decrease(member_id, user_info, 200_000_000)
-                if networth_decreased:
-                    print(f"{member_name}'s net worth decreased by $200 million or more in the last 48 hours.")
+                if check_networth_decrease(member_id, 200e6)
+                    print(f"{member_name}'s net worth decreased by $200 million or more in the last week.")
 
     else:
         print("Failed to retrieve faction members.")
