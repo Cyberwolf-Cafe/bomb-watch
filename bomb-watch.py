@@ -1,5 +1,8 @@
 import requests
 import time
+import random
+import torn
+api = torn.Fetch(torn.public)
 
 api_key = 'L40rkMstF9EBf6ot'
 
@@ -26,26 +29,11 @@ def get_faction_members(faction_id):
 
 def get_networth(user_id, timestamp):
     # Prepare the API request URL
-    base_url = 'https://api.torn.com/user/'
-    url = f'{base_url}{user_id}?selections=personalstats&timestamp={timestamp}&stat=networth&key={api_key}'
-    print(url)
+    selection = f'user/{user_id}?selections=personalstats&timestamp={timestamp}&stat=networth'
+    data = api.get(selection)
+    nw = data['personalstats']['networth']
+    return nw
 
-    try:
-        # Send the API request
-        response = requests.get(url)
-        data = response.json()
-
-        # Check if the request was successful
-        if data.get('error'):
-            raise Exception(f"Error: {data['error']['error']}")
-
-        nw = data['personalstats']['networth']
-        print(nw)
-        return nw
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
 
 
 def check_networth_decrease(user_id, threshold):
@@ -58,6 +46,7 @@ def check_networth_decrease(user_id, threshold):
     for i in range(7):
         now -= day
         nw = get_networth(user_id, now)
+        print(nw)
         if False and (pnw - nw) <= threshold:
             return True
         pnw = nw
@@ -78,8 +67,16 @@ def main():
 
 def test():
     bask = 2514476
-    print(check_networth_decrease(bask, 1))
+    toilet = 2241143
+    kogetsu = 2354802
 
-test()
+    now = int(time.time())
+    day = 60*60*24
+    for i in range(7):
+        nw = [get_networth(u,now) for u in [bask,toilet,kogetsu]]
+        now -= day
+        print(nw)
 
+#test()
 
+print(check_networth_decrease(2514476, 1))
