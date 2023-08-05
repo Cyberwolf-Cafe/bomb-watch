@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime, timedelta
+import time
 
 api_key = 'L40rkMstF9EBf6ot'
 
@@ -26,8 +26,8 @@ def get_faction_members(faction_id):
 
 def get_networth(user_id, timestamp):
     # Prepare the API request URL
-    base_url = 'https://api.torn.com/profile/'
-    url = f'{base_url}{user_id}?selections=personalstats&timestamp={timestamp}&key={api_key}'
+    base_url = 'https://api.torn.com/user/'
+    url = f'{base_url}{user_id}?selections=personalstats&timestamp={timestamp}&stat=networth&key={api_key}'
 
     try:
         # Send the API request
@@ -48,8 +48,8 @@ def get_networth(user_id, timestamp):
 def check_networth_decrease(user_id, threshold):
 
     # Get nw values from the last week
-    now = datetime.now()
-    day = timedelta(hours=24)
+    now = int(time.time())
+    day = 60*60*24
 
     pnw = get_networth(user_id, now)
     for i in range(7):
@@ -58,18 +58,25 @@ def check_networth_decrease(user_id, threshold):
         if (pnw - nw) >= threshold:
             return True
         pnw = nw
-
     return False
 
-if __name__ == "__main__":
+def main():
     faction_id = '20303'
     members_dict = get_faction_members(faction_id)
 
     if members_dict:
         print(f"Members of Faction {faction_id}:")
         for member_id, member_name in members_dict.items():
-                if check_networth_decrease(member_id, 200e6)
-                    print(f"{member_name}'s net worth decreased by $200 million or more in the last week.")
+            if check_networth_decrease(member_id, 200e6):
+                print(f"{member_name}'s net worth decreased by $200 million or more in the last week.")
 
     else:
         print("Failed to retrieve faction members.")
+
+def test():
+    bask = 2514476
+    print(check_networth_decrease(bask, 1))
+
+test()
+
+
