@@ -28,6 +28,7 @@ def get_networth(user_id, timestamp):
     # Prepare the API request URL
     base_url = 'https://api.torn.com/user/'
     url = f'{base_url}{user_id}?selections=personalstats&timestamp={timestamp}&stat=networth&key={api_key}'
+    print(url)
 
     try:
         # Send the API request
@@ -38,7 +39,9 @@ def get_networth(user_id, timestamp):
         if data.get('error'):
             raise Exception(f"Error: {data['error']['error']}")
 
-        return data['personalstats']['networth']
+        nw = data['personalstats']['networth']
+        print(nw)
+        return nw
 
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -55,7 +58,7 @@ def check_networth_decrease(user_id, threshold):
     for i in range(7):
         now -= day
         nw = get_networth(user_id, now)
-        if (pnw - nw) >= threshold:
+        if False and (pnw - nw) <= threshold:
             return True
         pnw = nw
     return False
