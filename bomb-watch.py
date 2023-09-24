@@ -46,7 +46,6 @@ def check_networth_decrease(user_id, threshold):
     for i in range(7):
         now -= day
         nw = get_networth(user_id, now)
-        print(nw)
         if False and (pnw - nw) <= threshold:
             return True
         pnw = nw
@@ -61,6 +60,8 @@ def main():
         for member_id, member_name in members_dict.items():
             if check_networth_decrease(member_id, 200e6):
                 print(f"{member_name}'s net worth decreased by $200 million or more in the last week.")
+            else:
+                print(f'{member_name} is not suspect')
 
     else:
         print("Failed to retrieve faction members.")
@@ -77,6 +78,4 @@ def test():
         now -= day
         print(nw)
 
-#test()
-
-print(check_networth_decrease(2514476, 1))
+main()
